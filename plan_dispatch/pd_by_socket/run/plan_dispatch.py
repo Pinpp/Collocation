@@ -672,7 +672,7 @@ def check_log_sent(obj, send_beg_time, send_end_time, pd_log_id): ### after chec
     if group_id == 'XL001':
         time.sleep(1.5)
         ser_ip, ser_port = get_ser_config(group_id)[:]
-        cmd = 'ls /var/log/gtoaes/gtoaes*.log | sort -r'
+        cmd = 'ls -t /var/log/gtoaes/gtoaes*.log > log.log && head -n 3 log.log' #'ls /var/log/gtoaes/gtoaes*.log > log.log && tail -3 log.log | sort -r' #'ls /var/log/gtoaes/gtoaes*.log | sort -r' 
         logs = pd_socket_client(ser_ip, ser_port, cmd)
         if logs:
             sent_mark = 0
