@@ -1017,7 +1017,7 @@ def check_cam_log(obj,obj_infs,pd_log_id):
         return 'Wrong'
     if group_id == 'XL001':
         ser_ip, ser_port = get_ser_config(group_id)[:]
-        cmd = 'ls /var/log/gtoaes/gtoaes*.log | sort -r'
+        cmd = 'ls -t /var/log/gtoaes/gtoaes*.log > log.log && head -n 3 log.log' #'ls /var/log/gtoaes/gtoaes*.log | sort -r'
         logs = pd_socket_client(ser_ip, ser_port, cmd)
         if logs:
             com_mark = 0
@@ -1243,7 +1243,7 @@ def check_obj_stat_with_cal(obj,obj_infs,pd_log_id,group_id,unit_id,obj_sent_tim
     obj_name, filter, frmcnt = at(obj_infs, 'obj_name', 'filter', 'frmcnt')
     if group_id == 'XL001':
         ser_ip, ser_port = get_ser_config(group_id)[:]
-        cmd = 'ls /var/log/gtoaes/gtoaes*.log | sort -r'
+        cmd = 'ls -t /var/log/gtoaes/gtoaes*.log > log.log && head -n 3 log.log' #'ls /var/log/gtoaes/gtoaes*.log | sort -r'
         logs = pd_socket_client(ser_ip, ser_port, cmd)
         if logs:
             com_mark = 0
