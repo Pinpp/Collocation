@@ -166,6 +166,18 @@ def read_catalog(catalog_id):
     else:
         return ['','']
 
+def get_obj_info_more(obj_id):
+    data_line = []
+    sql = "select obj_name, source_ext_id from target where obj_id={}".format(obj_id)
+    res = sql_act(db, sql)
+    if res:
+        for i in res[0]:
+            if i:
+                data_line.append(i)
+            else:
+                data_line.append('')
+    return data_line
+
 def read_main(catalog_id):
     global db
     db = con_db()
@@ -193,6 +205,8 @@ def read_main(catalog_id):
             #     }
             # }
             # print(inst_info)
+            obj_info_more = get_obj_info_more(obj_id)
+            # obj_info_more: obj_name, source_ext_id
             data_line = []
             data_line.extend(catalog_info)
             data_line.extend(obj_info)
@@ -210,12 +224,14 @@ def read_main(catalog_id):
             data_line.append(inst_info['PF_CONF']['STABILITY'])
             data_line.append(inst_info['PF_CONF']['MOON_CHECK'])
             data_lines.append(data_line)
+            data_line.extend(obj_info_more)
             # data_line: 
             #   window_begin-0, window_end-1, svomdb_id-2, obj_source-3, obs_type-4, 
             #   rad-5, decd-6, req_obs_duration_in_minutes-7, min_cont_obs_duration_in_minutes-8, 
             #   req_completeness-9, pointing_attribute-10, priority-11, suggested_obs_t_beg-12, suggested_obs_t_end-13, 
             #   combined_observation-14, user_group-15, ECL_CONF-16, GRM_CONF-17, MXT_CONF-18, VT_EXPOSURE_TIME-19, VT_WINDOW_SIZE-20,
             #   VT_INTERVAL_BETWEEN_IMG-21, VT_READ_SPEED-22, VT_READ_CHANNEL-23, VT_CLEANING-24, STABILITY-25, MOON_CHECK-26
+            ### obj_name, source_ext_id
     
     close_db(db)
 

@@ -36,7 +36,7 @@ def write_gp_catalog_targets(gp_catalog_id, obj_id, svomdb_id, user_group):
     sql_act(db, sql, n=0)
 
 
-def write_target(obs_type, rad, decd, req_obs_duration, attribute, priority_level):
+def write_target(obs_type, rad, decd, req_obs_duration, attribute, priority_level, obj_name, obj_source, source_ext_id):
     '''
         req_obs_duration: unit need mins; but input secs
     '''
@@ -46,8 +46,8 @@ def write_target(obs_type, rad, decd, req_obs_duration, attribute, priority_leve
     priority_level_val = 'NULL'
     if priority_level and priority_level != 'nan':
         priority_level_val = "'{}'".format(priority_level)
-    sql = "insert into target (obs_type, radeg, decdeg, req_obs_duration_in_minutes, pointing_attribute, priority) values ('{}',{:.4f},{:.4f},{:.2f}, {}, {});".format(
-        obs_type, float(rad), float(decd), float(req_obs_duration)/60, attribute_val, priority_level_val)
+    sql = "insert into target (obs_type, radeg, decdeg, req_obs_duration_in_minutes, pointing_attribute, priority, obj_name, obj_source, source_ext_id ) values ('{}',{:.4f},{:.4f},{:.2f}, {}, {}, '{}', '{}', '{}');".format(
+        obs_type, float(rad), float(decd), float(req_obs_duration)/60, attribute_val, priority_level_val, obj_name, obj_source, source_ext_id)
     sql_act(db, sql, n=0)
     sql = "select obj_id from target order by obj_id desc limit 1;"
     res = sql_act(db, sql)
@@ -200,9 +200,9 @@ def write_main(data_lines_input):
         '0000-00-00T00:00:00Z', '0000-00-00T00:00:00Z')
     for data_line_input in data_lines_input:
         if data_line_input:
-            # write_target(obs_type, rad, decd, req_obs_duration, attribute, priority_level)
+            # write_target(obs_type, rad, decd, req_obs_duration, attribute, priority_level, ###obj_name, ###obj_source, ###source_ext_id)
             obj_id = write_target(
-                data_line_input[4], data_line_input[7], data_line_input[8], data_line_input[22], data_line_input[38], data_line_input[39])
+                data_line_input[4], data_line_input[7], data_line_input[8], data_line_input[22], data_line_input[38], data_line_input[39], '', '', '')
             # obj_list.append(obj_id)
             if obj_id:
                 write_target_comb_obs(obj_id, data_line_input[40])
@@ -231,7 +231,7 @@ def write_main(data_lines_input):
 def write_main_more(data_lines_input):
     '''
         data_line_proced:
-            [svomdb_id, obs_type, rad, decd, req_obs_duration, attribute, priority, ECL_CONF, MXT_CONF, VT_EXP_TIME, VT_WIN_SIZE, VT_INTERVAL, VT_READ_SPE, VT_READ_CHA, VT_CLE, PF_STA, PF_MOON, combined]
+            [svomdb_id, obs_type, rad, decd, req_obs_duration, attribute, priority, ECL_CONF, MXT_CONF, VT_EXP_TIME, VT_WIN_SIZE, VT_INTERVAL, VT_READ_SPE, VT_READ_CHA, VT_CLE, PF_STA, PF_MOON, combined, ###obj_name, ###obj_source, ###source_ext_id, ###user_group, ###GRM_CONF]
     '''
     global db
     db = con_db()
@@ -240,14 +240,14 @@ def write_main_more(data_lines_input):
     catalog_id = write_gp_catalog(
         '0000-00-00T00:00:00Z', '0000-00-00T00:00:00Z')
     for data_line_input in data_lines_input:
-        # write_target(obs_type, rad, decd, req_obs_duration, attribute, priority_level)
+        # write_target(obs_type, rad, decd, req_obs_duration, attribute, priority_level, ###obj_name, ###obj_source, ###source_ext_id)
         obj_id = write_target(
-            data_line_input[1], data_line_input[2], data_line_input[3], data_line_input[4], data_line_input[5], data_line_input[6])
+            data_line_input[1], data_line_input[2], data_line_input[3], data_line_input[4], data_line_input[5], data_line_input[6], data_line_input[18], data_line_input[19], data_line_input[20])
         # obj_list.append(obj_id)
         if obj_id:
             write_target_comb_obs(obj_id, data_line_input[17])  # combined
             write_gp_catalog_targets(
-                catalog_id, obj_id, data_line_input[0], '')  # svomdb_id
+                catalog_id, obj_id, data_line_input[0], data_line_input[21])  # svomdb_id
             # write_target_obs_params(obj_id, ECL_CONF, GRM_CONF, MXT_CONF, VT_CONF={}, PF_CONF={}):
             # '''
             #     VT_CONF_keys: EXPOSURE_TIME WINDOW_SIZE INTERVAL_BETWEEN_IMG READ_SPEED READ_CHANNEL CLEANING
@@ -258,7 +258,64 @@ def write_main_more(data_lines_input):
             PF_CONF = {
                 'STABILITY': data_line_input[15], 'MOON_CHECK': data_line_input[16]}
             write_target_obs_params(
-                obj_id, data_line_input[7], '', data_line_input[8], VT_CONF, PF_CONF)
+                obj_id, data_line_input[7], data_line_input[22], data_line_input[8], VT_CONF, PF_CONF)
+    # for obj in obj_list:
+        # write_gp_catalog_targets(catalog_id, obj, '')
+
+    close_db(db)
+
+    return catalog_id
+
+def write_main_more_more(data_lines_input):
+    global db
+    db = con_db()
+
+    # obj_list = []
+    catalog_id = write_gp_catalog(
+        '0000-00-00T00:00:00Z', '0000-00-00T00:00:00Z')
+    for line in data_lines_input:
+        svomdb_id = line[0]
+        obj_name = line[1]
+        obj_source = line[2]
+        source_ext_id = line[3]
+        obs_type = line[4]
+        rad = line[5]
+        decd = line[6]
+        req_obs_duration = line[7]
+        attribute = line[8]
+        priority_level = line[9]
+        combined = line[10]
+        user_group = line[11]
+        
+        ecl_conf = line[12]
+        grm_conf = line[13]
+        mxt_conf = line[14]
+        vt_exp_time = line[15]
+        vt_win_size = line[16]
+        vt_interval = line[17]
+        vt_read_spe = line[18]
+        vt_read_cha = line[19]
+        vt_read_cl = line[20]
+        pf_sta = line[21]
+        pf_moon = line[22]
+
+        obj_id = write_target(obs_type, rad, decd, req_obs_duration, attribute, priority_level, obj_name, obj_source, source_ext_id)
+        # obj_list.append(obj_id)
+        if obj_id:
+            write_target_comb_obs(obj_id, combined)
+            write_gp_catalog_targets(
+                catalog_id, obj_id, svomdb_id, user_group)
+            # write_target_obs_params(obj_id, ECL_CONF, GRM_CONF, MXT_CONF, VT_CONF={}, PF_CONF={}):
+            # '''
+            #     VT_CONF_keys: EXPOSURE_TIME WINDOW_SIZE INTERVAL_BETWEEN_IMG READ_SPEED READ_CHANNEL CLEANING
+            #     PF_CONF_keys: STABILITY MOON_CHECK
+            # '''
+            VT_CONF = {'EXPOSURE_TIME': vt_exp_time, 'WINDOW_SIZE': vt_win_size, 'INTERVAL_BETWEEN_IMG': vt_interval,
+                       'READ_SPEED': vt_read_spe, 'READ_CHANNEL': vt_read_cha, 'CLEANING': vt_read_cl}
+            PF_CONF = {
+                'STABILITY': pf_sta, 'MOON_CHECK': pf_moon}
+            write_target_obs_params(
+                obj_id, ecl_conf, grm_conf, mxt_conf, VT_CONF, PF_CONF)
     # for obj in obj_list:
         # write_gp_catalog_targets(catalog_id, obj, '')
 
