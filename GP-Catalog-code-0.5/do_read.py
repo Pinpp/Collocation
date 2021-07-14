@@ -168,7 +168,7 @@ def read_catalog(catalog_id):
 
 def get_obj_info_more(obj_id):
     data_line = []
-    sql = "select obj_name, source_ext_id from target where obj_id={}".format(obj_id)
+    sql = "select obj_name, source_name, source_ext_id from target where obj_id={}".format(obj_id)
     res = sql_act(db, sql)
     if res:
         for i in res[0]:
@@ -231,7 +231,7 @@ def read_main(catalog_id):
             #   req_completeness-9, pointing_attribute-10, priority-11, suggested_obs_t_beg-12, suggested_obs_t_end-13, 
             #   combined_observation-14, user_group-15, ECL_CONF-16, GRM_CONF-17, MXT_CONF-18, VT_EXPOSURE_TIME-19, VT_WINDOW_SIZE-20,
             #   VT_INTERVAL_BETWEEN_IMG-21, VT_READ_SPEED-22, VT_READ_CHANNEL-23, VT_CLEANING-24, STABILITY-25, MOON_CHECK-26
-            ### obj_name, source_ext_id
+            ### obj_name-27, source_name-28, source_ext_id-29
     
     close_db(db)
 
